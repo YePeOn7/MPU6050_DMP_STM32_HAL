@@ -22,7 +22,7 @@
 #include <math.h>
 
 //#include "delay.h"
-#include "ioi2c.h"
+#include "IOI2C.h"
 
 #define INV_X_GYRO      (0x40)
 #define INV_Y_GYRO      (0x20)
