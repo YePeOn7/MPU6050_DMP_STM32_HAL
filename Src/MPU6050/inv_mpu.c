@@ -40,7 +40,6 @@
 
 #define i2c_write   i2cWrite
 #define i2c_read    i2cRead
-#define delay_ms    HAL_Delay
 #define get_ms      myget_ms
 
 //static int reg_int_cb(struct int_param_s *int_param)
@@ -1778,11 +1777,12 @@ int mpu_read_fifo(short *gyro, short *accel, unsigned long *timestamp,
  *  @param[in]  data    FIFO packet.
  *  @param[in]  more    Number of remaining packets.
  */
+int fifoCnt;
 int mpu_read_fifo_stream(unsigned short length, unsigned char *data,
     unsigned char *more)
 {
     unsigned char tmp[2];
-    unsigned short fifo_count;
+    int fifo_count;
     if (!st.chip_cfg.dmp_on)
         return -1;
     if (!st.chip_cfg.sensors)
@@ -1790,7 +1790,7 @@ int mpu_read_fifo_stream(unsigned short length, unsigned char *data,
 
     if (i2c_read(st.hw->addr, st.reg->fifo_count_h, 2, tmp))
         return -1;
-    fifo_count = (tmp[0] << 8) | tmp[1];
+    fifo_count = fifoCnt = (tmp[0] << 8) | tmp[1];
     if (fifo_count < length) {
         more[0] = 0;
         return -1;

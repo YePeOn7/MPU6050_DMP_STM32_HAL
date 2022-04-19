@@ -40,7 +40,6 @@
 
 #define i2c_write   i2cWrite
 #define i2c_read    i2cRead
-#define delay_ms    HAL_Delay
 #define get_ms      myget_ms
 
 //static int reg_int_cb(struct int_param_s *int_param)

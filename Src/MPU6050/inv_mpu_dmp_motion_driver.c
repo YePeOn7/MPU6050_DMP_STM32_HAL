@@ -1,5 +1,5 @@
 
-//пч╦дхуж╬ё╨2020 08-28 в╒ймаккЫсп╣дprintfё╛╠ёж╓ц╩спprintf╣дй╠╨Р©иртуЩЁёй╧сц
+//О©╫ч╦О©╫О©╫О©╫ж╬О©╫О©╫2020 08-28 в╒О©╫О©╫О©╫О©╫О©╫О©╫О©╫п╣О©╫printfО©╫О©╫О©╫О©╫ж╓ц╩О©╫О©╫printfО©╫О©╫й╠О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫й╧О©╫О©╫
 
 
 /**
@@ -28,7 +28,7 @@
 #if defined MOTION_DRIVER_TARGET_MSP430
 //#include "msp430.h"
 //#include "msp430_clock.h"
-#define delay_ms    delay_ms
+//#define delay_ms    delay_ms
 #define get_ms      get_ms
 #define log_e    printf
 #define log_i    printf

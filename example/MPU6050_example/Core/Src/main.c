@@ -105,17 +105,14 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  HAL_Delay(1000);
-  if(I2C1->SR2&2)
-  {
-	  I2C1->CR1 |= (1<<15);
-	  I2C1->CR1 &= ~(1<<15);
-//	  while(!HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_7));
-//	  I2C1->CR1 &= ~(1<<15);
-  }
-
-
   IIC_Init(hi2c1);
+
+  /* Recovering process if SDA low
+   * explanation in here (Indonesian language): https://youtu.be/dcVTQzlIebs
+   */
+  IIC_InitLockupRecover(GPIOB, GPIO_PIN_6, GPIOB, GPIO_PIN_7);
+  IIC_LockupRecover();
+
   printf("\n\rMPU6050 is initializing....\n\r");
   MPU6050_initialize();
   printf("\n\rMPU6050 has been initialized....\n\r");

@@ -246,8 +246,20 @@ void MPU6050_setI2CBypassEnabled(uint8_t enabled) {
 *��������:	    ��ʼ�� 	MPU6050 �Խ������״̬��
 *******************************************************************************/
 void MPU6050_initialize(void) {
+	u8 temp[1]={0};
+	u8 retry = 0;
+	i2cRead(0x68,0x75,1,temp);
+	// check for several times, don't give up too early
+	do
+	{
+		i2cRead(0x68,0x75,1,temp);
+		retry++;
+
+		if(retry > 100) NVIC_SystemReset();
+	}while(temp[0]!=0x68);
+
 	MPU6050_setClockSource(MPU6050_CLOCK_PLL_YGYRO); //����ʱ��
-	MPU6050_setFullScaleGyroRange(MPU6050_GYRO_FS_2000);//������������� +-2000��ÿ��
+	MPU6050_setFullScaleGyroRange(MPU6050_GYRO_FS_250);//������������� +-2000��ÿ��
 	MPU6050_setFullScaleAccelRange(MPU6050_ACCEL_FS_2);	//���ٶȶ�������� +-2G
 	MPU6050_setSleepEnabled(0); //���빤��״̬
 	MPU6050_setI2CMasterModeEnabled(0);	 //����MPU6050 ����AUXI2C

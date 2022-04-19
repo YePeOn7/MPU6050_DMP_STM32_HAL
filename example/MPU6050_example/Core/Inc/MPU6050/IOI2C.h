@@ -8,6 +8,9 @@
 /**************** modify by YP7 **************/
 #define I2C_TIMEOUT 1000
 #define u8 uint8_t
+#define IIC_GPIO_NUMBER	16
+#define delay_ms    HAL_Delay
+//#define delay_ms(x)		HAL_Delay(x)
 
 extern I2C_HandleTypeDef i2c_handle;
 
@@ -83,6 +86,10 @@ void IICreadBytes(u8 dev, u8 reg, u8 length, u8 *data);
 
 int i2cWrite(uint8_t addr, uint8_t reg, uint8_t len, uint8_t *data);
 int i2cRead(uint8_t addr, uint8_t reg, uint8_t len, uint8_t *buf);
+
+void IIC_LockupRecover();
+void IIC_InitLockupRecover(GPIO_TypeDef * _GPIO_SLC, uint32_t _GPIO_PIN_SCL, GPIO_TypeDef * _GPIO_SDA, uint32_t _GPIO_PIN_SDA);
+
 
 #endif
 

@@ -1,10 +1,54 @@
 #include "IOI2C.h"
 
 I2C_HandleTypeDef i2c_handle;
+GPIO_TypeDef * GPIO_SCL;
+GPIO_TypeDef * GPIO_SDA;
+uint32_t GPIO_PIN_SCL;
+uint32_t GPIO_PIN_SDA;
 
 void IIC_Init(I2C_HandleTypeDef i2cHandle)
 {			
 	i2c_handle = i2cHandle;
+}
+
+void IIC_InitLockupRecover(GPIO_TypeDef * _GPIO_SLC, uint32_t _GPIO_PIN_SCL, GPIO_TypeDef * _GPIO_SDA, uint32_t _GPIO_PIN_SDA)
+{
+	GPIO_SDA = _GPIO_SDA;
+	GPIO_SCL = _GPIO_SLC;
+	GPIO_PIN_SCL = _GPIO_PIN_SCL;
+	GPIO_PIN_SDA = _GPIO_PIN_SDA;
+}
+
+void IIC_LockupRecover()
+{
+	if(!HAL_GPIO_ReadPin(GPIO_SDA, GPIO_PIN_SDA))
+	{
+		// Lockup Recovery process
+		for(int i = 0; i < IIC_GPIO_NUMBER; i++)
+		{
+			if((1 << i) & GPIO_PIN_SCL)
+			{
+				// put the pin into output mode
+				GPIO_SCL-> MODER &= ~(0b11 << 2*i);
+				GPIO_SCL-> MODER |= (0b1 << 2*i);
+
+				// inject 9 pulses to SCL
+				for(int j = 0; j < 9; j++)
+				{
+					HAL_GPIO_WritePin(GPIO_SCL, GPIO_PIN_SCL, RESET);
+					delay_ms(1);
+					HAL_GPIO_WritePin(GPIO_SCL, GPIO_PIN_SCL, SET);
+					delay_ms(1);
+				}
+
+				// put the pin back into AF mode
+				GPIO_SCL-> MODER &= ~(0b11 << 2*i);
+				GPIO_SCL-> MODER |= (0b10 << 2*i);
+			}
+		}
+
+
+	}
 }
 
 /**************************ʵ�ֺ���********************************************
