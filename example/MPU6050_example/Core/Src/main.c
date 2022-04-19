@@ -48,6 +48,7 @@
 /* USER CODE BEGIN PV */
 int seconds = 0;
 long cnt11;
+int check;
 
 float pr, rr, yr;
 float pitch;
@@ -98,21 +99,29 @@ int main(void)
   MX_I2C1_Init();
   MX_USART1_UART_Init();
   MX_TIM11_Init();
-  MX_I2C2_Init();
   /* USER CODE BEGIN 2 */
 
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+  HAL_Delay(1000);
+  if(I2C1->SR2&2)
+  {
+	  I2C1->CR1 |= (1<<15);
+	  I2C1->CR1 &= ~(1<<15);
+//	  while(!HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_7));
+//	  I2C1->CR1 &= ~(1<<15);
+  }
 
 
   IIC_Init(hi2c1);
+  printf("\n\rMPU6050 is initializing....\n\r");
   MPU6050_initialize();
   printf("\n\rMPU6050 has been initialized....\n\r");
   MPU6050_DMPInit();
-  MPU6050_setYawCorrectorRate(-0.00415); // put the drifting rate of Yaw
-
+  MPU6050_setYawCorrectorRate(-0.00415); // put the drifting rate of Yaw to be corrected
+//  HAL_I2C_
   HAL_TIM_Base_Start_IT(&htim11);
   long last_tick = HAL_GetTick();
   while (1)
@@ -121,7 +130,7 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
 	  MPU6050_readDMPAll(&pitch, &roll, &yaw);
-
+	  HAL_GPIO_TogglePin(GPIOD, GPIO_PIN_15);
 	  if(HAL_GetTick()- last_tick > 1000)
 	  {
 		  last_tick = HAL_GetTick();
@@ -185,14 +194,6 @@ int _write(int file, char *ptr, int len)
 {
 	HAL_UART_Transmit(&huart1, (uint8_t*) ptr, len, HAL_MAX_DELAY);
 	return len;
-}
-
-void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
-{
-	if(GPIO_Pin == GPIO_PIN_5)
-	{
-		check++;
-	}
 }
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
