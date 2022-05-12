@@ -360,10 +360,13 @@
 
 #define MPU6050_WHO_AM_I_BIT        6
 #define MPU6050_WHO_AM_I_LENGTH     6
-extern	short gyro[3], accel[3];
+extern	short MPU6050_gyroRAW[3], MPU6050_accelRAW[3];
 extern int16_t Gx_offset,Gy_offset,Gz_offset;
 extern float Acc1G_Values; 
 extern float MPU6050_Pitch, MPU6050_Roll, MPU6050_Yaw;
+
+extern float MPU6050_gyroSensitivity;
+extern float MPU6050_accSensitivity;
 
 extern float MPU6050_PitchCorrectorRate;
 extern float MPU6050_RollCorrectorRate;
@@ -393,5 +396,8 @@ void MPU6050_setRollCorrectorRate(float rollCorrectorRate);
 void MPU6050_setYawCorrectorRate(float yawCorrectorRate);
 void MPU6050_updateAngleCorrector(void);
 void MPU6050_getDriftingRate(float pitch, float roll, float yaw, float* pitchRate, float* rollRate, float* yawRate);
+
+void MPU6050_getDecodedGyro(float* gyro);
+void MPU6050_getDecodedAcc(float* acc);
 
 #endif

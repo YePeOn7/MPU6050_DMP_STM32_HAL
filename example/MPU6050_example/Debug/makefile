@@ -77,8 +77,8 @@ all: main-build
 main-build: MPU6050_example.elf secondary-outputs
 
 # Tool invocations
-MPU6050_example.elf MPU6050_example.map: $(OBJS) $(USER_OBJS) /home/yp7/dev/MPU6050_DMP_STM32_HAL/example/MPU6050_example/STM32F411VETX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-g++ -o "MPU6050_example.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"/home/yp7/dev/MPU6050_DMP_STM32_HAL/example/MPU6050_example/STM32F411VETX_FLASH.ld" -Wl,-Map="MPU6050_example.map" -Wl,--gc-sections -static -u _printf_float --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -lstdc++ -lsupc++ -Wl,--end-group
+MPU6050_example.elf MPU6050_example.map: $(OBJS) $(USER_OBJS) /home/yp7/dev/ROS_based_Robot/STM32_ws/MPU6050_DMP_STM32_HAL/example/MPU6050_example/STM32F411VETX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-g++ -o "MPU6050_example.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"/home/yp7/dev/ROS_based_Robot/STM32_ws/MPU6050_DMP_STM32_HAL/example/MPU6050_example/STM32F411VETX_FLASH.ld" -Wl,-Map="MPU6050_example.map" -Wl,--gc-sections -static -u _printf_float --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -lstdc++ -lsupc++ -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 

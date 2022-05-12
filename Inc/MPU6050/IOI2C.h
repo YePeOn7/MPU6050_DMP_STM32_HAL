@@ -46,32 +46,12 @@ extern I2C_HandleTypeDef i2c_handle;
 #define PEin(n)    BIT_ADDR(GPIOE_IDR_Addr,n)  //���� 
 
 
-//IO��������
-/*
-
-CRL(Pin0-7)
-CRH(Pin8-15)
-GPIOE->CRL&=0XFFF0FFFF  ����PE4��CNF[1:0]��MODE[1:0]������Ϊ0,0000
-GPIOE->CRL|=8<<4*4      ����1000���������룩������16λ�������ڴ���PE4�ļĴ���λ����
-						      0011��������� 50MHZ��
-*/
-//#define SDA_IN()  {GPIOB->CRH&=0XFFFFFF0F;GPIOB->CRH|=8<<4;}
-//#define SDA_OUT() {GPIOB->CRH&=0XFFFFFF0F;GPIOB->CRH|=3<<4;}
-
-//IO��������	 
 #define IIC_SCL    PBout(8) //SCL
 #define IIC_SDA    PBout(9) //SDA	 
 #define READ_SDA   PBin(9)  //����SDA 
 
 
 void IIC_Init(I2C_HandleTypeDef i2cHandle);
-//int IIC_Start(void);
-//void IIC_Stop(void);
-//void IIC_Send_Byte(u8 txd);
-//u8 IIC_Read_Byte(unsigned char ack);
-//int IIC_Wait_Ack(void);
-//void IIC_Ack(void);
-//void IIC_NAck(void);
 
 void IIC_Write_One_Byte(u8 daddr,u8 addr,u8 data);
 u8 IIC_Read_One_Byte(u8 daddr,u8 addr);	 
@@ -93,4 +73,3 @@ void IIC_InitLockupRecover(GPIO_TypeDef * _GPIO_SLC, uint32_t _GPIO_PIN_SCL, GPI
 
 #endif
 
-//------------------End of File----------------------------

@@ -1,8 +1,6 @@
 #include <MPU6050.h>
 #include "stdio.h"
 
-//�޸���־��2020 08-28 ע�������е�printf����֤û��printf��ʱ���������ʹ��
-
 #define PRINT_ACCEL     (0x01)
 #define PRINT_GYRO      (0x02)
 #define PRINT_QUAT      (0x04)
@@ -14,7 +12,7 @@
 #define FLASH_SIZE      (512)
 #define FLASH_MEM_START ((void*)0x1800)
 #define q30  1073741824.0f
-short gyro[3], accel[3], sensors;
+short MPU6050_gyroRAW[3], MPU6050_accelRAW[3], sensors;
 float MPU6050_Pitch, MPU6050_Roll, MPU6050_Yaw;
 
 float MPU6050_PitchCorrectorRate = 0;
@@ -28,6 +26,9 @@ float q0=1.0f,q1=0.0f,q2=0.0f,q3=0.0f;
 static signed char gyro_orientation[9] = {-1, 0, 0,
                                            0,-1, 0,
                                            0, 0, 1};
+
+float MPU6050_gyroSensitivity;
+float MPU6050_accSensitivity;
 
 static  unsigned short inv_row_2_scale(const signed char *row)
 {
@@ -68,23 +69,23 @@ static void run_self_test(void)
     long gyro[3], accel[3];
 
     result = mpu_run_self_test(gyro, accel);
-    if (result == 0x03) {                   //����0x03ΪMPU6050
+    if (result == 0x03) {
         /* Test passed. We can trust the gyro data here, so let's push it down
          * to the DMP.
          */
         float sens;
         unsigned short accel_sens;
-        mpu_get_gyro_sens(&sens);			//��ȡ��ǰ�����ǵ�״̬
+        mpu_get_gyro_sens(&sens);			״̬
         gyro[0] = (long)(gyro[0] * sens);
         gyro[1] = (long)(gyro[1] * sens);
         gyro[2] = (long)(gyro[2] * sens);
-        dmp_set_gyro_bias(gyro);			//���ݶ�ȡ��״̬����У׼
+        dmp_set_gyro_bias(gyro);
 		
-        mpu_get_accel_sens(&accel_sens);	//��ȡ��ǰ���ٶȼƵ�״̬
+        mpu_get_accel_sens(&accel_sens);	״̬
         accel[0] *= accel_sens;
         accel[1] *= accel_sens;
         accel[2] *= accel_sens;
-        dmp_set_accel_bias(accel);			//���ݶ�ȡ��״̬����У׼
+        dmp_set_accel_bias(accel);
 		//printf("setting bias succesfully ......\r\n");
     }
 }
@@ -95,16 +96,11 @@ int16_t  MPU6050_FIFO[6][11];
 
 int16_t Gx_offset=0,Gy_offset=0,Gz_offset=0;
 
-/**************************ʵ�ֺ���********************************************
-*����ԭ��:		void  MPU6050_newValues(int16_t ax,int16_t ay,int16_t az,int16_t gx,int16_t gy,int16_t gz)
-*��������:	    ���µ�ADC���ݸ��µ� FIFO���飬�����˲�����
-*******************************************************************************/
-
 void  MPU6050_newValues(int16_t ax,int16_t ay,int16_t az,int16_t gx,int16_t gy,int16_t gz)
 {
 	unsigned char i ;
 	int32_t sum=0;
-	for(i=1;i<10;i++){	//FIFO ����
+	for(i=1;i<10;i++){
 		MPU6050_FIFO[0][i-1]=MPU6050_FIFO[0][i];
 		MPU6050_FIFO[1][i-1]=MPU6050_FIFO[1][i];
 		MPU6050_FIFO[2][i-1]=MPU6050_FIFO[2][i];
@@ -112,7 +108,7 @@ void  MPU6050_newValues(int16_t ax,int16_t ay,int16_t az,int16_t gx,int16_t gy,i
 		MPU6050_FIFO[4][i-1]=MPU6050_FIFO[4][i];
 		MPU6050_FIFO[5][i-1]=MPU6050_FIFO[5][i];
 	}
-	MPU6050_FIFO[0][9]=ax;//���µ����ݷ��õ� ���ݵ������
+	MPU6050_FIFO[0][9]=ax;
 	MPU6050_FIFO[1][9]=ay;
 	MPU6050_FIFO[2][9]=az;
 	MPU6050_FIFO[3][9]=gx;
@@ -120,7 +116,7 @@ void  MPU6050_newValues(int16_t ax,int16_t ay,int16_t az,int16_t gx,int16_t gy,i
 	MPU6050_FIFO[5][9]=gz;
 
 	sum=0;
-	for(i=0;i<10;i++){	//��ǰ����ĺϣ���ȡƽ��ֵ
+	for(i=0;i<10;i++){
 	   sum+=MPU6050_FIFO[0][i];
 	}
 	MPU6050_FIFO[0][10]=sum/10;
@@ -156,9 +152,8 @@ void  MPU6050_newValues(int16_t ax,int16_t ay,int16_t az,int16_t gx,int16_t gy,i
 	MPU6050_FIFO[5][10]=sum/10;
 }
 
-/**************************ʵ�ֺ���********************************************
-*����ԭ��:		void MPU6050_setClockSource(uint8_t source)
-*��������:	    ����  MPU6050 ��ʱ��Դ
+/*****************************************
+
  * CLK_SEL | Clock Source
  * --------+--------------------------------------
  * 0       | Internal oscillator
@@ -185,66 +180,52 @@ void MPU6050_setClockSource(uint8_t source){
  */
 void MPU6050_setFullScaleGyroRange(uint8_t range) {
     IICwriteBits(devAddr, MPU6050_RA_GYRO_CONFIG, MPU6050_GCONFIG_FS_SEL_BIT, MPU6050_GCONFIG_FS_SEL_LENGTH, range);
+
+    switch(range)
+    {
+    	case MPU6050_GYRO_FS_250: MPU6050_gyroSensitivity = 131; break;
+    	case MPU6050_GYRO_FS_500: MPU6050_gyroSensitivity = 65.5; break;
+    	case MPU6050_GYRO_FS_1000: MPU6050_gyroSensitivity = 32.8; break;
+    	case MPU6050_GYRO_FS_2000: MPU6050_gyroSensitivity = 16.4; break;
+    }
 }
 
-/**************************ʵ�ֺ���********************************************
-*����ԭ��:		void MPU6050_setFullScaleAccelRange(uint8_t range)
-*��������:	    ����  MPU6050 ���ٶȼƵ��������
-*******************************************************************************/
 void MPU6050_setFullScaleAccelRange(uint8_t range) {
     IICwriteBits(devAddr, MPU6050_RA_ACCEL_CONFIG, MPU6050_ACONFIG_AFS_SEL_BIT, MPU6050_ACONFIG_AFS_SEL_LENGTH, range);
+
+    switch(range)
+    {
+    	case MPU6050_ACCEL_FS_2: MPU6050_accSensitivity = 16384; break;
+    	case MPU6050_ACCEL_FS_4: MPU6050_accSensitivity = 8192; break;
+    	case MPU6050_ACCEL_FS_8: MPU6050_accSensitivity = 4096; break;
+    	case MPU6050_ACCEL_FS_16: MPU6050_accSensitivity = 2048; break;
+    }
 }
 
-/**************************ʵ�ֺ���********************************************
-*����ԭ��:		void MPU6050_setSleepEnabled(uint8_t enabled)
-*��������:	    ����  MPU6050 �Ƿ����˯��ģʽ
-				enabled =1   ˯��
-			    enabled =0   ����
-*******************************************************************************/
 void MPU6050_setSleepEnabled(uint8_t enabled) {
     IICwriteBit(devAddr, MPU6050_RA_PWR_MGMT_1, MPU6050_PWR1_SLEEP_BIT, enabled);
 }
 
-/**************************ʵ�ֺ���********************************************
-*����ԭ��:		uint8_t MPU6050_getDeviceID(void)
-*��������:	    ��ȡ  MPU6050 WHO_AM_I ��ʶ	 ������ 0x68
-*******************************************************************************/
 uint8_t MPU6050_getDeviceID(void) {
 
     IICreadBytes(devAddr, MPU6050_RA_WHO_AM_I, 1, buffer);
     return buffer[0];
 }
 
-/**************************ʵ�ֺ���********************************************
-*����ԭ��:		uint8_t MPU6050_testConnection(void)
-*��������:	    ���MPU6050 �Ƿ��Ѿ�����
-*******************************************************************************/
 uint8_t MPU6050_testConnection(void) {
    if(MPU6050_getDeviceID() == 0x68)  //0b01101000;
    return 1;
    	else return 0;
 }
 
-/**************************ʵ�ֺ���********************************************
-*����ԭ��:		void MPU6050_setI2CMasterModeEnabled(uint8_t enabled)
-*��������:	    ���� MPU6050 �Ƿ�ΪAUX I2C�ߵ�����
-*******************************************************************************/
 void MPU6050_setI2CMasterModeEnabled(uint8_t enabled) {
     IICwriteBit(devAddr, MPU6050_RA_USER_CTRL, MPU6050_USERCTRL_I2C_MST_EN_BIT, enabled);
 }
 
-/**************************ʵ�ֺ���********************************************
-*����ԭ��:		void MPU6050_setI2CBypassEnabled(uint8_t enabled)
-*��������:	    ���� MPU6050 �Ƿ�ΪAUX I2C�ߵ�����
-*******************************************************************************/
 void MPU6050_setI2CBypassEnabled(uint8_t enabled) {
     IICwriteBit(devAddr, MPU6050_RA_INT_PIN_CFG, MPU6050_INTCFG_I2C_BYPASS_EN_BIT, enabled);
 }
 
-/**************************ʵ�ֺ���********************************************
-*����ԭ��:		void MPU6050_initialize(void)
-*��������:	    ��ʼ�� 	MPU6050 �Խ������״̬��
-*******************************************************************************/
 void MPU6050_initialize(void) {
 	u8 temp[1]={0};
 	u8 retry = 0;
@@ -258,20 +239,14 @@ void MPU6050_initialize(void) {
 		if(retry > 100) NVIC_SystemReset();
 	}while(temp[0]!=0x68);
 
-	MPU6050_setClockSource(MPU6050_CLOCK_PLL_YGYRO); //����ʱ��
-	MPU6050_setFullScaleGyroRange(MPU6050_GYRO_FS_250);//������������� +-2000��ÿ��
-	MPU6050_setFullScaleAccelRange(MPU6050_ACCEL_FS_2);	//���ٶȶ�������� +-2G
-	MPU6050_setSleepEnabled(0); //���빤��״̬
-	MPU6050_setI2CMasterModeEnabled(0);	 //����MPU6050 ����AUXI2C
-	MPU6050_setI2CBypassEnabled(0);	 //����������I2C��	MPU6050��AUXI2C	ֱͨ������������ֱ�ӷ���HMC5883L
+	MPU6050_setClockSource(MPU6050_CLOCK_PLL_YGYRO);
+	MPU6050_setFullScaleGyroRange(MPU6050_GYRO_FS_250);
+	MPU6050_setFullScaleAccelRange(MPU6050_ACCEL_FS_2);
+	MPU6050_setSleepEnabled(0);
+	MPU6050_setI2CMasterModeEnabled(0);
+	MPU6050_setI2CBypassEnabled(0);
 }
 
-
-/**************************************************************************
-�������ܣ�MPU6050����DMP�ĳ�ʼ��
-��ڲ�������
-����  ֵ����
-**************************************************************************/
 void MPU6050_DMPInit(void)
 { 
 	u8 temp[1]={0};
@@ -340,7 +315,7 @@ void MPU6050_DMPInit(void)
 	}
 }
 /**************************************************************************
-The output of this function will return to MPU6050_Pitch, MPU6050_Roll, MPU6050_Yaw
+The output of this function will be saved to MPU6050_Pitch, MPU6050_Roll, MPU6050_Yaw
 **************************************************************************/
 void MPU6050_readDMP(void)
 {	
@@ -349,7 +324,7 @@ void MPU6050_readDMP(void)
 	long quat[4];
 	float pitch, roll, yaw;
 
-	dmp_read_fifo(gyro, accel, quat, &sensor_timestamp, &sensors, &more);		
+	dmp_read_fifo(MPU6050_gyroRAW, MPU6050_accelRAW, quat, &sensor_timestamp, &sensors, &more);
 	if (sensors & INV_WXYZ_QUAT )
 	{    
 		 q0=quat[0] / q30;
@@ -385,7 +360,7 @@ void MPU6050_readDMPAll(float* Pitch, float* Roll, float* Yaw)
 	long quat[4];
 	float pitch, roll, yaw;
 
-	dmp_read_fifo(gyro, accel, quat, &sensor_timestamp, &sensors, &more);
+	dmp_read_fifo(MPU6050_gyroRAW, MPU6050_accelRAW, quat, &sensor_timestamp, &sensors, &more);
 	if (sensors & INV_WXYZ_QUAT )
 	{
 		 q0=quat[0] / q30;
@@ -408,9 +383,9 @@ void MPU6050_readDMPAll(float* Pitch, float* Roll, float* Yaw)
 		 yaw = fmod(yaw, 360);
 		 if(yaw > 180) yaw -= 360;
 
-		 *Pitch = pitch;
-		 *Roll = roll;
-		 *Yaw = yaw;
+		 *Pitch	= MPU6050_Pitch	= pitch;
+		 *Roll 	= MPU6050_Roll 	= roll;
+		 *Yaw 	= MPU6050_Yaw 	= yaw;
 	}
 }
 
@@ -421,7 +396,7 @@ float MPU6050_readDMPPitch()
 	long quat[4];
 	float pitch;
 
-	dmp_read_fifo(gyro, accel, quat, &sensor_timestamp, &sensors, &more);
+	dmp_read_fifo(MPU6050_gyroRAW, MPU6050_accelRAW, quat, &sensor_timestamp, &sensors, &more);
 	if (sensors & INV_WXYZ_QUAT )
 	{
 		 q0=quat[0] / q30;
@@ -433,9 +408,10 @@ float MPU6050_readDMPPitch()
 		 pitch += MPU6050_PitchCorrector;
 		 pitch = fmod(pitch, 360);
 		 if(pitch > 180) pitch -= 360;
+		 MPU6050_Pitch = pitch;
 	}
 
-	return pitch;
+	return MPU6050_Pitch;
 }
 float MPU6050_readDMPRoll()
 {
@@ -444,7 +420,7 @@ float MPU6050_readDMPRoll()
 	long quat[4];
 	float roll;
 
-	dmp_read_fifo(gyro, accel, quat, &sensor_timestamp, &sensors, &more);
+	dmp_read_fifo(MPU6050_gyroRAW, MPU6050_accelRAW, quat, &sensor_timestamp, &sensors, &more);
 	if (sensors & INV_WXYZ_QUAT )
 	{
 		 q0=quat[0] / q30;
@@ -457,9 +433,10 @@ float MPU6050_readDMPRoll()
 		 roll += MPU6050_RollCorrector;
 		 roll = fmod(roll, 360);
 		 if(roll > 180) roll -= 360;
+		 MPU6050_Roll = roll;
 	}
 
-	return roll;
+	return MPU6050_Roll;
 }
 
 float MPU6050_readDMPYaw()
@@ -469,7 +446,7 @@ float MPU6050_readDMPYaw()
 	long quat[4];
 	float yaw;
 
-	dmp_read_fifo(gyro, accel, quat, &sensor_timestamp, &sensors, &more);
+	dmp_read_fifo(MPU6050_gyroRAW, MPU6050_accelRAW, quat, &sensor_timestamp, &sensors, &more);
 	if (sensors & INV_WXYZ_QUAT )
 	{
 		 q0=quat[0] / q30;
@@ -482,15 +459,12 @@ float MPU6050_readDMPYaw()
 		 yaw += MPU6050_YawCorrector;
 		 yaw = fmod(yaw, 360);
 		 if(yaw > 180) yaw -= 360;
+		 MPU6050_Yaw = yaw;
 	}
 
-	return yaw;
+	return MPU6050_Yaw;
 }
-/**************************************************************************
-�������ܣ���ȡMPU6050�����¶ȴ���������
-��ڲ�������
-����  ֵ�������¶�
-**************************************************************************/
+
 float MPU6050_readTemperature(void)
 {	   
 	float Temp;
@@ -530,8 +504,24 @@ void MPU6050_getDriftingRate(float pitch, float roll, float yaw, float* pitchRat
 	*rollRate = roll/t;
 	*yawRate = yaw/t;
 
-	printf("%.2f %f %li\n\r", yaw, *yawRate, t);
+//	printf("%.2f %f %li\n\r", yaw, *yawRate, t);
 
 	t++;
 }
-//------------------End of File----------------------------
+
+void MPU6050_getDecodedGyro(float* gyro)
+{
+	for(int i = 0; i < 0; i++)
+	{
+		gyro[i] = (float)MPU6050_gyroRAW[i] / MPU6050_gyroSensitivity;
+	}
+}
+
+void MPU6050_getDecodedAcc(float* acc)
+{
+	for(int i = 0; i < 0; i++)
+	{
+		acc[i] = (float)MPU6050_accelRAW[i] / MPU6050_accSensitivity;
+	}
+}
+
