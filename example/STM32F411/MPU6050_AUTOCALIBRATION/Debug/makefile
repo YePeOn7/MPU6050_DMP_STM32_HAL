@@ -61,8 +61,8 @@ all: main-build
 main-build: MPU6050_AUTOCALIBRATION.elf secondary-outputs
 
 # Tool invocations
-MPU6050_AUTOCALIBRATION.elf MPU6050_AUTOCALIBRATION.map: $(OBJS) $(USER_OBJS) /home/yp7/dev/ROS_based_Robot/STM32_ws/MPU6050_AUTOCALIBRATION/STM32F411VETX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-gcc -o "MPU6050_AUTOCALIBRATION.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"/home/yp7/dev/ROS_based_Robot/STM32_ws/MPU6050_AUTOCALIBRATION/STM32F411VETX_FLASH.ld" --specs=nosys.specs -Wl,-Map="MPU6050_AUTOCALIBRATION.map" -Wl,--gc-sections -static -u _printf_float --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+MPU6050_AUTOCALIBRATION.elf MPU6050_AUTOCALIBRATION.map: $(OBJS) $(USER_OBJS) /home/yp7/dev/ROS_based_Robot/STM32_ws/MPU6050_DMP_STM32_HAL/example/STM32F411/MPU6050_AUTOCALIBRATION/STM32F411VETX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-gcc -o "MPU6050_AUTOCALIBRATION.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"/home/yp7/dev/ROS_based_Robot/STM32_ws/MPU6050_DMP_STM32_HAL/example/STM32F411/MPU6050_AUTOCALIBRATION/STM32F411VETX_FLASH.ld" --specs=nosys.specs -Wl,-Map="MPU6050_AUTOCALIBRATION.map" -Wl,--gc-sections -static -u _printf_float --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 
