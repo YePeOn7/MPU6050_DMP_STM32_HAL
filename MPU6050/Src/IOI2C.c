@@ -89,21 +89,18 @@ u8 IICreadByte(u8 dev, u8 reg, u8 *data){
 }
 
 unsigned char IICwriteByte(unsigned char dev, unsigned char reg, unsigned char data){
-    return IICwriteBytes(dev, reg, 1, &data);
+	return IICwriteBytes(dev, reg, 1, &data);
 }
 
 u8 IICwriteBits(u8 dev,u8 reg,u8 bitStart,u8 length,u8 data)
 {
-
     u8 b;
     if (IICreadByte(dev, reg, &b) != 0) {
-    	printf("start: %d\n", b);
-        u8 mask = (0xFF >> (8-length)) << bitStart;
-        data &= (mask >> bitStart);
-        data <<= bitStart;
+        u8 mask = (0xFF >> (8-length)) << (bitStart-(length-1));
+        data &= (mask >> (bitStart-(length-1)));
+        data <<= (bitStart-(length-1));
         b &= ~mask;
         b |= data;
-        printf("end: %d\n",b);
         return IICwriteByte(dev, reg, b);
     } else {
         return 0;

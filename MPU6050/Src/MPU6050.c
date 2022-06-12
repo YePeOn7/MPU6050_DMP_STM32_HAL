@@ -362,7 +362,7 @@ void MPU6050_DMPInit(void)
 	}
 
 	MPU6050_setZeroMotionDetectionThreshold(1); //set this value to make it very sensitive to movement
-	MPU6050_setZeroMotionDetectionDuration(1); //make it as fast as possible detect if the sensor has no movement
+	MPU6050_setZeroMotionDetectionDuration(50); //make it as fast as possible detect if the sensor has no movement
 }
 /**************************************************************************
 The output of this function will return to MPU6050_Pitch, MPU6050_Roll, MPU6050_Yaw
@@ -666,47 +666,60 @@ void MPU6050_setAllGyroOffset(int16_t* gyroOffset)
 	MPU6050_setZGyroOffset(gyroOffset[2]);
 }
 
-void MPU6050_GyroCalibration(int observationTime, float threshold)
+void MPU6050_GyroCalibration(int loop)
 {
-	int loop = 100;
-	int16_t temp[3] = {0};
 	short gyroOffset[3];
-	unsigned short gyroFSR;
-	short gyroOffsetFSR = 1000; //get from "MPU HW Offset Registers 1.2.pdf"
+	float gyroOffsetF[3];
+	float kp, ki, kd;
+	float P[3]={0};
+	float I[3]={0};
+	float D[3]={0};
+	float error[3];
+	float lastError[3];
+	float maxI = 1.0;
+//	int indexMonitor = 2;
 
+	kp = 0.3;
+	ki = 2;
+	kd = 0.0001;
 	/************** FIRST STEP CALIBRATION **********/
-	mpu_get_gyro_fsr(&gyroFSR);
-
-	for (int i=0;i<50;i++) while(MPU6050_readDMP());
-	for(int i = 0;i < loop;i++)
+	MPU6050_getAllGyroOffset(gyroOffset);
+	for(int i =0; i < 3; i++) gyroOffsetF[i] = gyroOffset[i];
+	for(int i = 0;i < loop; i++)
 	{
 		while(MPU6050_readDMP());
-		temp[0] += MPU6050_gyroRAW[0];
-		temp[1] += MPU6050_gyroRAW[1];
-		temp[2] += MPU6050_gyroRAW[2];
+		for(int j = 0; j < 3; j++)
+		{
+			error[j] = -MPU6050_gyroRAW[j];
+			P[j] = kp * error[j];
+			I[j] += ki * error[j] * 0.001;
+			D[j] = kd * (error[j] - lastError[j])/0.001;
+
+			if(I[j]> maxI) I[j] = maxI;
+			else if(I[j] < -maxI) I[j] = -maxI;
+
+			if(fabs(error[j]) < 2) I[j] = 0;
+
+			float adjustValue = P[j] + I[j] + D[j];
+			if(j == 2) gyroOffsetF[j] += adjustValue;
+			else gyroOffsetF[j] -= adjustValue;
+			gyroOffset[j] = gyroOffsetF[j];
+
+			lastError[j] = error[j];
+		}
+		MPU6050_setAllGyroOffset(gyroOffset);
+
+//		printf("P: %.1f I: %.1f D: %.1f e: %.1f oF: %.1f oS: %d\n", P[indexMonitor],
+//													I[indexMonitor],
+//													D[indexMonitor],
+//													error[indexMonitor],
+//													gyroOffsetF[indexMonitor],
+//													gyroOffset[indexMonitor]);
+		delay_ms(1);
 	}
 
-	for(int i = 0; i < 3; i++)
-	{
-		temp[i] = temp[i]/loop;
-	}
-	MPU6050_getAllGyroOffset(gyroOffset);
-
-	gyroOffset[0] += temp[0]*gyroFSR/gyroOffsetFSR;
-	gyroOffset[1] += temp[1]*gyroFSR/gyroOffsetFSR;
-	gyroOffset[2] -= temp[2]*gyroFSR/gyroOffsetFSR;
-
-	MPU6050_setAllGyroOffset(gyroOffset);
-
-	/**************** SECOND STEP CALIBRATION ******************/
-	while(1)
-	{
-		MPU6050_readDMPYaw();
-		if(MPU6050_GyroContinuosCalibration(observationTime, threshold)) break;
-		delay_ms(100);
-	}
-//	mpu_reset_fifo();
-//	mpu_reset_dmp();
+	mpu_reset_fifo();
+	mpu_reset_dmp();
 }
 
 int MPU6050_GyroContinuosCalibration(int observationTime, float threshold) //only Yaw
@@ -738,7 +751,7 @@ int MPU6050_GyroContinuosCalibration(int observationTime, float threshold) //onl
 		startYaw = MPU6050_YawUncorected;
 	}
 
-	printf("yaw: %.1f ms:%d startTime:%li timeSpent:%d dr:%.3f offset:%d\n", MPU6050_Yaw, motionStatus, startTime, timeSpent, gyroDriftRate, offset);
+	printf("yaw: %.2f ms:%d startTime:%li timeSpent:%d dr:%.4f offset:%d\n", MPU6050_Yaw, motionStatus, startTime, timeSpent, gyroDriftRate, offset);
 	previoustMotionStatus = motionStatus;
 
 	if(gyroDriftRate != 0 && fabs(gyroDriftRate) < threshold) return 1;

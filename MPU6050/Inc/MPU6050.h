@@ -416,7 +416,7 @@ int16_t MPU6050_getZGyroOffset();
 void MPU6050_setZGyroOffset(int16_t offset);
 void MPU6050_getAllGyroOffset(int16_t* gyroOffset);
 
-void MPU6050_GyroCalibration(int observationTime, float threshold);
+void MPU6050_GyroCalibration(int loop);
 int MPU6050_GyroContinuosCalibration(int observationTime, float threshold);
 
 #endif

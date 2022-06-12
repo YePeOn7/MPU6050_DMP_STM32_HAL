@@ -61,7 +61,7 @@ int ZTh;
 int ZDur;
 int motionStatus;
 float yaw;
-int gyroOffsetZ;
+int16_t gyroOffset[3];
 uint8_t control;
 /* USER CODE END 0 */
 
@@ -113,11 +113,10 @@ int main(void)
   printf("\n\rMPU6050 has been initialized....\n\r");
   MPU6050_DMPInit();
   dmp_enable_gyro_cal(0);
-//  MPU6050_setYawCorrectorRate(-0.00415); // put the drifting rate of Yaw to be corrected
-  MPU6050_GyroCalibration(1000, 0.01);
+//  MPU6050_setZGyroOffset(-32);
+  MPU6050_GyroCalibration(200);
 
-  printf("Gyro Calibrated!!!!!!!!!!");
-  HAL_Delay(2000);
+  printf("Gyro Has Been Calibrated!!!!!!!!!!\n");
 
   ZDur = MPU6050_getZeroMotionDetectionDuration();
   ZTh = MPU6050_getZeroMotionDetectionThreshold();
@@ -125,9 +124,9 @@ int main(void)
   HAL_TIM_Base_Start_IT(&htim11);
   while (1)
   {
-	  gyroOffsetZ = MPU6050_getZGyroOffset();
+	  MPU6050_getAllGyroOffset(gyroOffset);
 	  yaw = MPU6050_readDMPYaw();
-	  MPU6050_GyroContinuosCalibration(10000, 0);
+	  MPU6050_GyroContinuosCalibration(5000, 0);
 	  HAL_Delay(100);
     /* USER CODE END WHILE */
 
