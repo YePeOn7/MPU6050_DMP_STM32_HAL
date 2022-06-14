@@ -1770,6 +1770,13 @@ int mpu_read_fifo(short *gyro, short *accel, unsigned long *timestamp,
     return 0;
 }
 
+int mpu_get_fifo_cnt()
+{
+	unsigned char tmp[2];
+	i2c_read(st.hw->addr, st.reg->fifo_count_h, 2, tmp);
+	return (tmp[0] << 8) | tmp[1];
+}
+
 /**
  *  @brief      Get one unparsed packet from the FIFO.
  *  This function should be used if the packet is to be parsed elsewhere.
@@ -1790,6 +1797,7 @@ int mpu_read_fifo_stream(unsigned short length, unsigned char *data,
     if (i2c_read(st.hw->addr, st.reg->fifo_count_h, 2, tmp))
         return -1;
     fifo_count = (tmp[0] << 8) | tmp[1];
+
     if (fifo_count < length) {
         more[0] = 0;
         return -1;

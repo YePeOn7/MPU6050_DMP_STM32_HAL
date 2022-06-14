@@ -677,9 +677,9 @@ void MPU6050_GyroCalibration(int loop)
 	float error[3];
 	float lastError[3];
 	float maxI = 1.0;
-//	int indexMonitor = 2;
+	int indexMonitor = 2;
 
-	kp = 0.3;
+	kp = 0.1;
 	ki = 2;
 	kd = 0.0001;
 	/************** FIRST STEP CALIBRATION **********/
@@ -709,12 +709,12 @@ void MPU6050_GyroCalibration(int loop)
 		}
 		MPU6050_setAllGyroOffset(gyroOffset);
 
-//		printf("P: %.1f I: %.1f D: %.1f e: %.1f oF: %.1f oS: %d\n", P[indexMonitor],
-//													I[indexMonitor],
-//													D[indexMonitor],
-//													error[indexMonitor],
-//													gyroOffsetF[indexMonitor],
-//													gyroOffset[indexMonitor]);
+		printf("P: %.1f I: %.1f D: %.1f e: %.1f oF: %.1f oS: %d\n", P[indexMonitor],
+													I[indexMonitor],
+													D[indexMonitor],
+													error[indexMonitor],
+													gyroOffsetF[indexMonitor],
+													gyroOffset[indexMonitor]);
 		delay_ms(1);
 	}
 
@@ -756,5 +756,14 @@ int MPU6050_GyroContinuosCalibration(int observationTime, float threshold) //onl
 
 	if(gyroDriftRate != 0 && fabs(gyroDriftRate) < threshold) return 1;
 	return 0;
+}
+
+int MPU6050_getFifoCount()
+{
+	uint8_t data[2];
+//	uint16_t fifoCount;
+	IICreadBytes(devAddr, MPU6050_RA_FIFO_COUNTH, 2, data);
+
+	return data[0]<<8 | data[1];
 }
 //------------------End of File----------------------------

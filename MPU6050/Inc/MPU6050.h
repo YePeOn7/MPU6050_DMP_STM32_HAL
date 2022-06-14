@@ -418,5 +418,6 @@ void MPU6050_getAllGyroOffset(int16_t* gyroOffset);
 
 void MPU6050_GyroCalibration(int loop);
 int MPU6050_GyroContinuosCalibration(int observationTime, float threshold);
+int MPU6050_getFifoCount();
 
 #endif
