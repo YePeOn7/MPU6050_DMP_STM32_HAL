@@ -746,7 +746,11 @@ int MPU6050_GyroContinuosCalibration(int observationTime, float threshold) //onl
 	timeSpent = (getTick() - startTime);
 	if(motionStatus && timeSpent > observationTime)
 	{
-		gyroDriftRate = (MPU6050_YawUncorected - startYaw)/timeSpent*1000;
+		float deltaAngle = MPU6050_YawUncorected - startYaw;
+		if(deltaAngle > 180) deltaAngle -= 360;
+		if(deltaAngle < -180) deltaAngle += 360;
+
+		gyroDriftRate = deltaAngle/timeSpent*1000;
 		currentOffset = MPU6050_getZGyroOffset();
 		offset = currentOffset - round((float)gyroDriftRate*32.7675);
 		MPU6050_setZGyroOffset(offset);
