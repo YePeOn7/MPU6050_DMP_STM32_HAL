@@ -418,7 +418,11 @@ void MPU6050_readDMPAll(float* Pitch, float* Roll, float* Yaw)
 	long quat[4];
 	float pitch, roll, yaw;
 
-	dmp_read_fifo(MPU6050_gyroRAW, MPU6050_accelRAW, quat, &sensor_timestamp, &sensors, &more);
+	do
+	{
+		dmp_read_fifo(MPU6050_gyroRAW, MPU6050_accelRAW, quat, &sensor_timestamp, &sensors, &more);
+	}while(more);
+
 	if (sensors & INV_WXYZ_QUAT )
 	{
 		 q0=quat[0] / q30;
@@ -458,7 +462,11 @@ float MPU6050_readDMPPitch()
 	long quat[4];
 	float pitch;
 
-	dmp_read_fifo(MPU6050_gyroRAW, MPU6050_accelRAW, quat, &sensor_timestamp, &sensors, &more);
+	do
+	{
+		dmp_read_fifo(MPU6050_gyroRAW, MPU6050_accelRAW, quat, &sensor_timestamp, &sensors, &more);
+	}while(more);
+
 	if (sensors & INV_WXYZ_QUAT )
 	{
 		 q0=quat[0] / q30;
@@ -484,7 +492,11 @@ float MPU6050_readDMPRoll()
 	long quat[4];
 	float roll;
 
-	dmp_read_fifo(MPU6050_gyroRAW, MPU6050_accelRAW, quat, &sensor_timestamp, &sensors, &more);
+	do
+	{
+		dmp_read_fifo(MPU6050_gyroRAW, MPU6050_accelRAW, quat, &sensor_timestamp, &sensors, &more);
+	}while(more);
+
 	if (sensors & INV_WXYZ_QUAT )
 	{
 		 q0=quat[0] / q30;
@@ -512,7 +524,11 @@ float MPU6050_readDMPYaw()
 	long quat[4];
 	float yaw;
 
-	dmp_read_fifo(MPU6050_gyroRAW, MPU6050_accelRAW, quat, &sensor_timestamp, &sensors, &more);
+	do
+	{
+		dmp_read_fifo(MPU6050_gyroRAW, MPU6050_accelRAW, quat, &sensor_timestamp, &sensors, &more);
+	}while(more);
+
 	if (sensors & INV_WXYZ_QUAT )
 	{
 		 q0=quat[0] / q30;
@@ -751,7 +767,7 @@ int MPU6050_GyroContinuosCalibration(int observationTime, float threshold) //onl
 		startYaw = MPU6050_YawUncorected;
 	}
 
-	printf("yaw: %.2f ms:%d startTime:%li timeSpent:%d dr:%.4f offset:%d\n", MPU6050_Yaw, motionStatus, startTime, timeSpent, gyroDriftRate, offset);
+//	printf("yaw: %.2f ms:%d startTime:%li timeSpent:%d dr:%.4f offset:%d\n", MPU6050_Yaw, motionStatus, startTime, timeSpent, gyroDriftRate, offset);
 	previoustMotionStatus = motionStatus;
 
 	if(gyroDriftRate != 0 && fabs(gyroDriftRate) < threshold) return 1;

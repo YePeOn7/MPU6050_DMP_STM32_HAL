@@ -128,5 +128,7 @@ int mpu_register_tap_cb(void (*func)(unsigned char, unsigned char));
 void myget_ms(unsigned long *time);
 void mpu_reset_dmp();
 
+int mpu_read_fifo_stream_last_packet(unsigned short length, unsigned char *data);
+
 #endif  /* #ifndef _INV_MPU_H_ */
 

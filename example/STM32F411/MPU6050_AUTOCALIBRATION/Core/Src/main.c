@@ -63,6 +63,7 @@ int motionStatus;
 float yaw;
 int16_t gyroOffset[3];
 uint8_t control;
+int time;
 /* USER CODE END 0 */
 
 /**
@@ -125,9 +126,12 @@ int main(void)
   while (1)
   {
 	  MPU6050_getAllGyroOffset(gyroOffset);
+	  long lastTime = HAL_GetTick();
 	  yaw = MPU6050_readDMPYaw();
+	  time = HAL_GetTick() - lastTime;
+
 	  MPU6050_GyroContinuosCalibration(5000, 0);
-	  HAL_Delay(100);
+	  HAL_Delay(1000);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */

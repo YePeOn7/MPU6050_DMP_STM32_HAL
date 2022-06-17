@@ -59,8 +59,8 @@ int i2cWrite(uint8_t addr, uint8_t reg, uint8_t len, uint8_t *data)
 
 int i2cRead(uint8_t addr, uint8_t reg, uint8_t len, uint8_t *buf)
 {
-	HAL_I2C_Mem_Read(&i2c_handle, addr << 1, reg, 1, buf, len, I2C_TIMEOUT);
-    return 0;
+	return (int)HAL_I2C_Mem_Read(&i2c_handle, addr << 1, reg, 1, buf, len, I2C_TIMEOUT);
+//    return 0;
 }
 
 unsigned char I2C_ReadOneByte(unsigned char I2C_Addr,unsigned char addr)

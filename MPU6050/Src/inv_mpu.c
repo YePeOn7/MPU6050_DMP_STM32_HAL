@@ -1777,6 +1777,12 @@ int mpu_get_fifo_cnt()
 	return (tmp[0] << 8) | tmp[1];
 }
 
+int mpu_get_fifo_bytes(uint8_t *data, uint8_t length)
+{
+	//when success will return 0
+	return i2c_read(st.hw->addr, st.reg->fifo_r_w, length, data);
+}
+
 /**
  *  @brief      Get one unparsed packet from the FIFO.
  *  This function should be used if the packet is to be parsed elsewhere.
@@ -1815,6 +1821,53 @@ int mpu_read_fifo_stream(unsigned short length, unsigned char *data,
     if (i2c_read(st.hw->addr, st.reg->fifo_r_w, length, data))
         return -1;
     more[0] = fifo_count / length - 1;
+    return 0;
+}
+
+int mpu_read_fifo_stream_last_packet(unsigned short length, unsigned char *data)
+{
+	uint8_t packetReceived;
+	uint8_t BUFFER_LENGTH = 32;
+    int fifo_count;
+    if (!st.chip_cfg.dmp_on)
+        return -1;
+    if (!st.chip_cfg.sensors)
+        return -1;
+
+    do
+    {
+    	if((fifo_count = mpu_get_fifo_cnt())>length)
+    	{
+    		if(fifo_count > 200)
+			{
+				mpu_reset_fifo();
+				fifo_count = 0;
+				while(!(fifo_count = mpu_get_fifo_cnt()));
+			}
+			else
+			{
+				uint8_t trash[BUFFER_LENGTH];
+				while((fifo_count = mpu_get_fifo_cnt()) > length)
+				{
+					fifo_count -= length; // save the last packet
+					uint16_t removeBytes;
+					while(fifo_count)
+					{
+						removeBytes = (fifo_count > BUFFER_LENGTH)?BUFFER_LENGTH:fifo_count;
+						mpu_get_fifo_bytes(trash, removeBytes);
+						fifo_count -= removeBytes;
+					}
+				}
+			}
+    	}
+    	if(!fifo_count)
+    	{
+    		while(!(fifo_count = mpu_get_fifo_cnt()));
+    	}
+    	packetReceived = fifo_count == length;
+    }while(!packetReceived);
+
+    mpu_get_fifo_bytes(data, length);
     return 0;
 }
 
