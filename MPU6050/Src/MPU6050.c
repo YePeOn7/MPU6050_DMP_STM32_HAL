@@ -418,10 +418,7 @@ void MPU6050_readDMPAll(float* Pitch, float* Roll, float* Yaw)
 	long quat[4];
 	float pitch, roll, yaw;
 
-	do
-	{
-		dmp_read_fifo(MPU6050_gyroRAW, MPU6050_accelRAW, quat, &sensor_timestamp, &sensors, &more);
-	}while(more);
+	dmp_read_fifo(MPU6050_gyroRAW, MPU6050_accelRAW, quat, &sensor_timestamp, &sensors, &more);
 
 	if (sensors & INV_WXYZ_QUAT )
 	{
@@ -462,10 +459,7 @@ float MPU6050_readDMPPitch()
 	long quat[4];
 	float pitch;
 
-	do
-	{
-		dmp_read_fifo(MPU6050_gyroRAW, MPU6050_accelRAW, quat, &sensor_timestamp, &sensors, &more);
-	}while(more);
+	dmp_read_fifo(MPU6050_gyroRAW, MPU6050_accelRAW, quat, &sensor_timestamp, &sensors, &more);
 
 	if (sensors & INV_WXYZ_QUAT )
 	{
@@ -492,11 +486,7 @@ float MPU6050_readDMPRoll()
 	long quat[4];
 	float roll;
 
-	do
-	{
-		dmp_read_fifo(MPU6050_gyroRAW, MPU6050_accelRAW, quat, &sensor_timestamp, &sensors, &more);
-	}while(more);
-
+	dmp_read_fifo(MPU6050_gyroRAW, MPU6050_accelRAW, quat, &sensor_timestamp, &sensors, &more);
 	if (sensors & INV_WXYZ_QUAT )
 	{
 		 q0=quat[0] / q30;
@@ -524,11 +514,7 @@ float MPU6050_readDMPYaw()
 	long quat[4];
 	float yaw;
 
-	do
-	{
-		dmp_read_fifo(MPU6050_gyroRAW, MPU6050_accelRAW, quat, &sensor_timestamp, &sensors, &more);
-	}while(more);
-
+	dmp_read_fifo(MPU6050_gyroRAW, MPU6050_accelRAW, quat, &sensor_timestamp, &sensors, &more);
 	if (sensors & INV_WXYZ_QUAT )
 	{
 		 q0=quat[0] / q30;
@@ -545,6 +531,7 @@ float MPU6050_readDMPYaw()
 		 if(yaw > 180) yaw -= 360;
 		 MPU6050_Yaw = yaw;
 	}
+	else printf("skip...\n");
 
 	return MPU6050_Yaw;
 }

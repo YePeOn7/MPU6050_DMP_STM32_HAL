@@ -1261,8 +1261,9 @@ int dmp_read_fifo(short *gyro, short *accel, long *quat,
     sensors[0] = 0;
 
     /* Get a packet. */
-    if (mpu_read_fifo_stream(dmp.packet_length, fifo_data, more))
-        return -1;
+//    if (mpu_read_fifo_stream(dmp.packet_length, fifo_data, more))
+//        return -1;
+    mpu_read_fifo_stream_last_packet(dmp.packet_length, fifo_data);
 
     /* Parse DMP packet. */
     if (dmp.feature_mask & (DMP_FEATURE_LP_QUAT | DMP_FEATURE_6X_LP_QUAT)) {
